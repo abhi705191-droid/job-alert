@@ -1,0 +1,57 @@
+name: Job Alert Check
+
+on:
+  schedule:
+    - cron: "30 12 * * *"   # 12:30 UTC = 6:00 PM IST, every day
+  workflow_dispatch:         # lets you manually trigger a test run from the Actions tab
+
+permissions:
+  contents: write            # needed so the bot can save the updated seen_jobs.json
+
+jobs:
+  check-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: job-alert-bot   # your files live inside this folder
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Lato font
+        run: sudo apt-get update -qq && sudo apt-get install -y fonts-lato
+        
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install LaTeX toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra fonts-liberation
+
+      - name: Run job check
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          PYTHONUNBUFFERED: "1"
+        run: python main.py
+
+      - name: Save updated "already seen" list
+        if: always()
+        run: |
+          git config user.name "job-alert-bot"
+          git config user.email "actions@github.com"
+          git fetch origin main
+          python3 merge_seen_jobs.py
+          python3 merge_companies.py
+          git reset --soft origin/main
+          git add seen_jobs.json companies.json
+          git diff --quiet --cached || git commit -m "Update seen jobs and companies list"
+          git push origin main
