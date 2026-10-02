@@ -638,10 +638,6 @@
     "url": "https://boards.greenhouse.io/saucelabs"
   },
   {
-    "name": "Inovalon",
-    "url": "https://boards.greenhouse.io/inovalon"
-  },
-  {
     "name": "Ontic",
     "url": "https://jobs.ashbyhq.com/ontic"
   },
@@ -1916,10 +1912,6 @@
   {
     "name": "Tailscale",
     "url": "https://boards.greenhouse.io/tailscale"
-  },
-  {
-    "name": "Hex Technologies",
-    "url": "https://boards.greenhouse.io/hextechnologies"
   },
   {
     "name": "Verve",
